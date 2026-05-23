@@ -1,7 +1,9 @@
 import { createContext, useState } from 'react'
 import './App.css'
+import Note from './components/Note';
+import NotesList from './components/NotesList';
 
-type Note = {
+export type Note = {
     id: string,
     date: number, // Consider whether it is important to make this UTC at this level.
     text: string,
@@ -38,58 +40,31 @@ const initialAppContext: AppState = {
 function App() {
     const [appState, setAppState] = useState(initialAppContext);
 
-    const handleInput = (event: React.InputEvent<HTMLInputElement>, id: string) => {
-        const input = event.currentTarget;
-        const text = input.value;
-
-        const noteIndex = appState.notes.findIndex(note => note.id === id);
-
-        if (noteIndex === -1) {
-            return;
-        }
-
-        // TODO: Validate text
-        const note = {...appState.notes[noteIndex], text };
-
-        const notes = appState.notes.map((n, index) => index === noteIndex ? note : n);
-
-        setAppState({...appState, notes});
-        
-    }
-
     const handleAddNote = () => {
         let { notes } = appState;
 
         notes = [...notes, {
             id: crypto.randomUUID(),
+            // eslint-disable-next-line react-hooks/purity
             date: Date.now(),
             text: '',
         }];
 
-        setAppState({...appState, notes});
+        handleNotesChange(notes);
     }
 
-    const handleRemoveNote = (noteId: string) => {
-        let { notes } = appState;
-
-        notes = notes.filter(n => n.id !== noteId);
-
+    const handleNotesChange = (notes: Note[]) => {
         setAppState({...appState, notes});
     }
 
     return (
         <AppContext.Provider value={appState}>
-            <ul>
-                {appState?.notes.map((note) => (
-                    <li key={note.id}>
-                        <div className="note-border">
-                            <input type="text" value={note.text} onInput={(event) => handleInput(event, note.id)} />
-                            <button type="button" onClick={() => handleRemoveNote(note.id)}>Remove</button>
-                        </div>
-                    </li>
-                ))}
-            </ul>
-            <button type="button" onClick={handleAddNote}>Add Note</button>
+            <div className="app">
+                <h2>Andor Health Notes +</h2>
+
+                <NotesList notes={appState.notes} onNotesChange={handleNotesChange} />
+                <button type="button" onClick={handleAddNote}>Add Note</button>
+            </div>
         </AppContext.Provider>
     )
 }
